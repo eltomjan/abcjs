@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" href="favicon.ico" type="image/x-icon"/>
+	<title>abcjs: Visual Editor Demo</title>
+<link rel="stylesheet" type="text/css" href="dragging.css">
+<script src="../bin/abcjs_basic_6.0.0-beta.8-min.js" type="text/javascript"></script>
+<script src="abcjs_basic_6.0.0-beta.8.js" type="text/javascript"></script>
+<script type="text/javascript" src="editorDragging.js"></script>
+<script type="text/javascript" src="dragging.js"></script>
+<script type="text/javascript" src="changed.js"></script>
+<script type="text/javascript" src="additional.js"></script>
+<style>
+	html, body {
+		margin: 0px;
+		height: 100%;
+		overflow: hidden;
+	}
+	svg#paintArea {
+		cursor: none;
+		background-image: url('https://image.shutterstock.com/image-vector/vintage-notesancient-musical-notation-by-600w-638820973.jpg');
+		background-repeat: no-repeat;
+		background-size: contain;
+	}
+	textarea {
+		width: 100%;
+		overflow: auto;
+	}
+</style>
+</head>
+<body onload="init()">
+<table width="100%" height="100%" cellPadding="0" cellSpacing="0">
+	<tr>
+		<td onclick="drawLines(event)" onmousemove="showPos(event)">
+			<svg id="paintArea" xmlns="http://www.w3.org/2000/svg"></svg>
+		</td>
+		<td width="1%">
+			<div id="warnings"></div>
+			<div id="paper">paper</div>
+			<div id="source">source</div>
+			<div id="info"></div>
+			<textarea id="abc" rows="20" onchange="setSrc(this.value)"></textarea><br>
+			<input type="button" value="Reset" onclick="resetRange()">
+			<input type="button" value="Save" onclick="sendNotes()">
+			<ul>
+				<li><label><input type="checkbox" id="allowDragging" onclick="optionChanged()" checked>Allow Dragging</label>
+					<div>When checked, then text is not selectable on the music and notes are draggable. You can
+						also navigate through the music with the tab key, and change notes with the up and down arrows. When not checked, then items are selectable, but not draggable.
+					</div>
+				</li>
+				<li><label><input type="checkbox" id="selectAll" onclick="optionChanged()">Select All</label>
+					<div>When this is checked, nearly every visible thing is selectable. When it is not checked, then only
+						the notes, rests, and measures are selectable.
+					</div>
+				</li>
+				<li><button onclick="selectPrevious()">Previous</button><button onclick="selectNext()">Next</button></li>
+			</ul>
+		</td>
+	</tr>
+</table>
+</body>
+</html>

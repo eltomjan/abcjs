@@ -1,0 +1,27 @@
+.row {
+	display: flex;
+	flex-wrap: wrap;
+}
+#source {
+	font-size: 13px;
+	max-width: 700px;
+	overflow: auto;
+	font-family: "Lucida Console", Monaco, monospace;
+	white-space: nowrap;
+}
+.select {
+	background-color: #FCF9BB;
+	box-shadow: 0 0 1px black;
+}
+ul {
+	max-width: 700px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+li {
+	margin-top:	10px;
+}
+label {
+	font-weight: bold;
+}
