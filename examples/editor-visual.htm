@@ -14,30 +14,51 @@
 <script type="text/javascript" src="changed.js"></script>
 <script type="text/javascript" src="additional.js"></script>
 <style>
-	html, body {
-		margin: 0px;
-		height: 100%;
-		overflow: hidden;
-	}
-	svg#paintArea {
-		cursor: none;
-		background-image: url('https://image.shutterstock.com/image-vector/vintage-notesancient-musical-notation-by-600w-638820973.jpg');
-		background-repeat: no-repeat;
-		background-size: contain;
-	}
-	textarea {
-		width: 100%;
-		overflow: auto;
-	}
+html, body {
+	margin: 0px;
+	width: 100%;
+}
+svg#paintArea {
+	width: 50%;
+	height: 200%;
+	position: absolute;
+	left: 0px;
+}
+textarea {
+	width: 95%;
+	overflow: auto;
+}
+.img-zoom-result {
+	/*set the size of the resultdiv:*/
+	width: 100px;
+	height: 100px;
+}
+img {
+	height: 100%;
+	z-index: -1;
+	left:0px;
+	top:0px;
+}
+svg#zoomArea {
+	stroke:rgb(0,223,0);
+	fill: none;
+	stroke-width:1px;
+}
 </style>
 </head>
 <body onload="init()">
 <table width="100%" height="100%" cellPadding="0" cellSpacing="0">
 	<tr>
-		<td onclick="drawLines(event)" onmousemove="showPos(event)">
-			<svg id="paintArea" xmlns="http://www.w3.org/2000/svg"></svg>
+		<td onclick="drawLines(event)" onmousemove="showPos(event)" valign="top">
+			<img src="https://www.didldu.de/files/media/folk-music/1101209090003-1.png?05449">
+			<svg id="paintArea" xmlns="http://www.w3.org/2000/svg" onmousemove="moveLens()"></svg>
 		</td>
-		<td width="1%">
+		<td>
+			<svg id="zoomArea" class="img-zoom-result" xmlns="http://www.w3.org/2000/svg">
+				<line x1="0" y1="49" x2="100" y2="49"/>
+				<line x1="50" y1="0" x2="50" y2="100"/>
+				<path d="m50 46 m-24 3 h48 m-24 -9 l0 21 m15 -9 l0 -56  m-24 50 m24 3  c0 -6 -6 -9 -18 -9  -9 0 -15 6 -15 9  0 6 6 9 21 9  9 0 15 -6 12 -12"/>
+			</svg>
 			<div id="warnings"></div>
 			<div id="paper">paper</div>
 			<div id="source">source</div>
