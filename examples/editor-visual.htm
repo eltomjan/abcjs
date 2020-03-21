@@ -44,12 +44,15 @@ svg#zoomArea {
 	fill: none;
 	stroke-width:1px;
 }
+input#SideNotes {
+	position: absolute;
+}
 </style>
 </head>
 <body onload="init()">
 <table width="100%" height="100%" cellPadding="0" cellSpacing="0">
 	<tr>
-		<td onclick="drawLines(event)" onmousemove="showPos(event)" valign="top">
+		<td onclick="staffRect(event)" onmousemove="showPos(event)" valign="top">
 			<img src="https://www.didldu.de/files/media/folk-music/1101209090003-1.png?05449">
 			<svg id="paintArea" xmlns="http://www.w3.org/2000/svg" onmousemove="moveLens()"></svg>
 		</td>
@@ -57,8 +60,9 @@ svg#zoomArea {
 			<svg id="zoomArea" class="img-zoom-result" xmlns="http://www.w3.org/2000/svg">
 				<line x1="0" y1="49" x2="100" y2="49"/>
 				<line x1="50" y1="0" x2="50" y2="100"/>
-				<path d="m50 46 m-24 3 h48 m-24 -9 l0 21 m15 -9 l0 -56  m-24 50 m24 3  c0 -6 -6 -9 -18 -9  -9 0 -15 6 -15 9  0 6 6 9 21 9  9 0 15 -6 12 -12"/>
+				<path d="m50 46 m-24 3 h48 m-24 -9 l0 21 m15 -9 l0 -56  m-24 50 m24 3  c0 -6 -6 -9 -18 -9  -9 0 -15 6 -15 9  0 6 6 9 21 9  9 0 15 -6 12 -12">
 			</svg>
+			<input id="SideNotes" onkeydown="keyFuncs(event)">
 			<div id="warnings"></div>
 			<div id="paper">paper</div>
 			<div id="source">source</div>

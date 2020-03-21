@@ -1,44 +1,92 @@
-var selectionRange = [], selectionSize = [], yStep, notes = {}, paintArea;
+var selectionRange = [], selectionSize = [], yStep, notes = {}, paintArea, staffPos = {};
 var noteList = allPitches.slice(14, 49), lens, result, cx = 3, cy = 3;
-function drawLines(e) {
+function staffRect(e) {
 	e = getCursorPos(e);
-	if (selectionRange.length < 2) {
-		selectionRange.push([e.x, e.y]);
-		document.getElementById("paintArea");
-		if (selectionRange.length === 2) {
-			selectionSize = selectionRange;
-			var y = selectionRange[0][1] + 1;
-			yStep = (selectionRange[1][1] - y + 1) / 4;
-			for (var i=0;i<5;i++) {
-				var newLine = document.createElementNS('http://www.w3.org/2000/svg','line');
-				newLine.setAttribute('x1', selectionRange[0][0]);
-				newLine.setAttribute('y1', y+0.5);
-				newLine.setAttribute('x2', selectionRange[1][0]);
-				newLine.setAttribute('y2', y+0.5);
-				newLine.setAttribute("stroke", "red")
-				newLine.setAttribute("stroke-width", "1px")
-				paintArea.appendChild(newLine);
-				y += yStep;
-			}
-			document.getElementById("info").innerText = JSON.stringify({
-				clicks:selectionRange,
-				step: yStep
-			})
-		} else {
-			for (var i=paintArea.childElementCount;;i--) {
-				if (i < 2) break;
-				paintArea.removeChild(paintArea.lastChild);
-			}
-		}
+	e.y--;
+	if (selectionRange.length < 2) drawLines(e);
+	else createNote(e);
+}
+function drawLines(e) {
+	selectionRange.push([e.x + !!selectionRange.length, e.y]);
+	if (selectionRange.length !== 2) return;
+	selectionSize = selectionRange;
+	var y = selectionRange[0][1] + 1;
+	yStep = (selectionRange[1][1] - y + 1) / 4;
+	for (var i=0;i<5;i++) {
+		var newLine = document.createElementNS('http://www.w3.org/2000/svg','line');
+		newLine.setAttribute('x1', selectionRange[0][0]);
+		newLine.setAttribute('y1', y+0.5);
+		newLine.setAttribute('x2', selectionRange[1][0]);
+		newLine.setAttribute('y2', y+0.5);
+		newLine.setAttribute("stroke", "red")
+		newLine.setAttribute("stroke-width", "1px")
+		paintArea.appendChild(newLine);
+		y += yStep;
+	}
+	document.getElementById("info").innerText = JSON.stringify({
+		clicks:selectionRange,
+		step: yStep
+	})
+	document.getElementById("SideNotes").focus();
+}
+function createNote(e) {
+	var noteRead = noteInfo(e);
+	if (noteList[noteRead + 18]) {
+		addNote(notePos(e), selectionRange[0][1] + 1 - (yStep*(noteRead-6)/2), document.getElementById("paintArea"),
+		"#00DF00", !(noteRead & 1));
+		notes[notePos(e)] = noteRead;
+	}
+}
+function keyFuncs(e) {
+	var grp = ['Left', 'Up', 'Down', 'Right'].indexOf(e.key);
+	if (grp > -1) {
+		arrowsLogic(e, grp);
+		return;
 	} else {
-		var noteRead = noteInfo(e);
-		if (noteList[noteRead + 18]) {
-			addNote(notePos(e), selectionRange[0][1] + 1 - (yStep*(noteRead-6)/2), document.getElementById("paintArea"),
-			"#00DF00", !(noteRead & 1));
-			notes[notePos(e)] = noteRead;
-
+		grp = e.key - '0';
+		if (grp >= 0 && grp <= 9) {
+			var noteRead = noteList[noteInfo(staffPos) + 18];
+			if (noteRead) {
+				createNote(staffPos);
+				if (grp == 1) sendNote(noteRead);
+				else sendNote(noteRead + grp);
+				e.preventDefault();
+			}
 		}
 	}
+	if (e.key == 'Spacebar') {
+		sendNote(' ');
+		arrowsLogic(e, 3);
+	}
+	if (e.key == 'Enter') {
+		moveNotes();
+	}
+	window.status = e.key;
+}
+function arrowsLogic(e, grp) {
+	if ({} === staffPos) staffPos = {x: e.x, y: e.y};
+	switch (grp) {
+		case 0: { // <-
+			staffPos.x = notePos(staffPos);
+			staffPos.x -= 16;
+			break;
+		}
+		case 1: { // ^
+			staffPos.y -= yStep / 2;
+			break;
+		}
+		case 2: { // ^
+			staffPos.y += yStep / 2;
+			break;
+		}
+		case 3: { // ->
+			staffPos.x = notePos(staffPos);
+			staffPos.x += 16;
+			break;
+		}
+	}
+	redNotePos(staffPos);
+	e.preventDefault();
 }
 var srcEl;
 function getSrc() {
@@ -69,15 +117,26 @@ function setSrc(abcString) {
 }
 function sendNotes() {
 	if (Object.keys(notes).length) {
-		var el = document.getElementById("abc");
 		for(var p in notes) {
-			el.value += noteList[notes[p] + 18] + ' ';
+			sendNote(noteList[notes[p] + 18] + ' ');
 		}
 		notes = {};
 		selectionRange = [];
 		selectionSize = [];
 		Editor.fireChanged();
 	}
+}
+function sendNote(n) {
+	var el = document.getElementById("SideNotes");
+	el.value += n;
+	el.focus();
+}
+function moveNotes() {
+	var el = document.getElementById("SideNotes");
+	document.getElementById("abc").value += el.value;
+	el.value = '';
+	el.focus();
+	Editor.fireChanged();
 }
 function noteInfo(e) {
 	return Math.round((selectionSize[1][1] - e.y)/yStep*2) - 2;
@@ -93,19 +152,31 @@ function showPos(e) {
 		cursor.setAttribute("stroke", "red")
 		paintArea.appendChild(cursor);
 	}
+	staffPos.x = e.x;
+	staffPos.y = e.y;
+	if (redNotePos(e)) return;
+	if (!selectionSize.length) info = JSON.stringify([parseInt(e.x), parseInt(e.y)]);
+	document.getElementById("info").innerText = info || 'Out of staff.';
+}
+function redNotePos(e) {
 	paintArea.firstElementChild.setAttribute('transform', 'translate(' + e.x + ',' + e.y + ')');
 	if (selectionSize.length) {
-		var noteRead = noteList[noteInfo(e) + 18];
+		var noteRead = noteList[noteInfo(e) + 18], info;
 		if (noteRead) {
 			info = parseInt(notePos(e)/6 - selectionSize[0][0]/6) + ' ' + noteRead;
 		}
-	} else info = JSON.stringify([parseInt(e.x), parseInt(e.y)]);
-	document.getElementById("info").innerText = info || 'Out of staff.';
+		document.getElementById("info").innerText = info || 'Out of staff.';
+		return noteRead;
+	}
 }
 function resetRange() {
 	selectionRange = [];
 	selectionSize = [];
 	notes = {};
+	for (var i=paintArea.childElementCount;;i--) {
+		if (i < 2) break;
+		paintArea.removeChild(paintArea.lastChild);
+	}
 }
 function notePos(e) {
 	return Math.round(e.x/6)*6;
@@ -118,8 +189,10 @@ function getCursorPos(e) { // https://www.w3schools.com/howto/howto_js_image_mag
 	/* Calculate the cursor's x and y coordinates, relative to the image: */
 	x = e.pageX - a.left;
 	y = e.pageY - a.top;
+	if (x >= paintArea.previousElementSibling.width) y = -1;
+	if (y >= paintArea.previousElementSibling.height) y = -1;
 	/* Consider any page scrolling: */
-	x = x -  window.pageXOffset;
+	x = x - window.pageXOffset;
 	y = y - window.pageYOffset;
 	return {x : x, y : y};
 }
@@ -137,9 +210,8 @@ function moveLens() {
 	/*Get the cursor's x and y positions: */
 	pos = getCursorPos(e);
 	/* Calculate the position of thelens: */
-	x = pos.x - 25 + 8;
-	y = pos.y - 25 + 11;
-//	x=980*3;y=50;
+	x = pos.x - 25 + 9;
+	y = pos.y - 25 + 10;
 	/* Display what the lens "sees": */
-	result.style.backgroundPosition = "-" + (x*cx) + "px -" + (y*cy) + "px";
+	result.style.backgroundPosition = "-" + (x*cx) + "px -" + (y*cy-2) + "px";
 }
