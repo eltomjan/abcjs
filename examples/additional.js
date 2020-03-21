@@ -1,4 +1,4 @@
-var selectionRange = [], selectionSize = [], yStep, notes = {}, paintArea, staffPos = {};
+var selectionRange = [], selectionSize = [], yStep, notes = {}, paintArea, staffPos = {}, staffImg;
 var noteList = allPitches.slice(14, 49), lens, result, cx = 3, cy = 3;
 function staffRect(e) {
 	e = getCursorPos(e);
@@ -38,12 +38,13 @@ function createNote(e) {
 	}
 }
 function keyFuncs(e) {
-	var grp = ['Left', 'Up', 'Down', 'Right'].indexOf(e.key);
+	var grp = ['Left', 'Up', 'Down', 'Right',
+	'ArrowLeft', 'ArrowUp', 'ArrowDown', 'ArrowRight'].indexOf(e.code || e.key) % 4;
 	if (grp > -1) {
 		arrowsLogic(e, grp);
 		return;
 	} else {
-		grp = e.key - '0';
+		grp = parseInt(e.key);
 		if (grp >= 0 && grp <= 9) {
 			var noteRead = noteList[noteInfo(staffPos) + 18];
 			if (noteRead) {
@@ -54,7 +55,7 @@ function keyFuncs(e) {
 			}
 		}
 	}
-	if (e.key == 'Spacebar') {
+	if ((e.code || e.key).indexOf('Space') == 0) {
 		sendNote(' ');
 		arrowsLogic(e, 3);
 	}
@@ -110,6 +111,7 @@ function setSrc(abcString) {
 	if (!srcEl) {
 		srcEl = document.getElementById("abc");
 		paintArea = document.getElementById("paintArea");
+		staffImg = paintArea.nextElementSibling;
 		lens = document.getElementsByClassName("img-zoom-lens")[0];
 		imageZoom("zoomArea");
 	}
@@ -189,19 +191,18 @@ function getCursorPos(e) { // https://www.w3schools.com/howto/howto_js_image_mag
 	/* Calculate the cursor's x and y coordinates, relative to the image: */
 	x = e.pageX - a.left;
 	y = e.pageY - a.top;
-	if (x >= paintArea.previousElementSibling.width) y = -1;
-	if (y >= paintArea.previousElementSibling.height) y = -1;
+	if (x >= staffImg.width) y = -1;
+	if (y >= staffImg.height) y = -1;
 	/* Consider any page scrolling: */
 	x = x - window.pageXOffset;
 	y = y - window.pageYOffset;
 	return {x : x, y : y};
 }
 function imageZoom(resultID) {
-	var img = paintArea.previousElementSibling;
 	result = document.getElementById(resultID);
 	/* Set background properties for the result DIV */
-	result.style.backgroundImage = "url('" + img.src + "')";
-	result.style.backgroundSize = (img.width * cx) + "px " + (img.height * cy) + "px";
+	result.style.backgroundImage = "url('" + staffImg.src + "')";
+	result.style.backgroundSize = (staffImg.width * cx) + "px " + (staffImg.height * cy) + "px";
 }
 function moveLens() {
 	var pos, x, y, e = event;
