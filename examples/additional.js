@@ -40,7 +40,7 @@ function createNote(e) {
 function keyFuncs(e) {
 	var grp = ['Left', 'Up', 'Down', 'Right',
 	'ArrowLeft', 'ArrowUp', 'ArrowDown', 'ArrowRight'].indexOf(e.code || e.key) % 4;
-	if (grp > -1) {
+	if (grp > -1 && selectionSize.length) {
 		arrowsLogic(e, grp);
 		return;
 	} else {
@@ -51,6 +51,8 @@ function keyFuncs(e) {
 				createNote(staffPos);
 				if (grp == 1) sendNote(noteRead);
 				else sendNote(noteRead + grp);
+				staffPos.x = Math.round(staffPos.x/6)*6 + 12;
+				redNotePos(staffPos);
 				e.preventDefault();
 			}
 		}
@@ -66,23 +68,24 @@ function keyFuncs(e) {
 }
 function arrowsLogic(e, grp) {
 	if ({} === staffPos) staffPos = {x: e.x, y: e.y};
+	var noteRead = noteInfo(staffPos);
 	switch (grp) {
 		case 0: { // <-
 			staffPos.x = notePos(staffPos);
-			staffPos.x -= 16;
+			staffPos.x -= 6;
 			break;
 		}
 		case 1: { // ^
-			staffPos.y -= yStep / 2;
+			fixNoteY(noteRead + 1, staffPos);
 			break;
 		}
 		case 2: { // ^
-			staffPos.y += yStep / 2;
+			fixNoteY(noteRead - 1, staffPos);
 			break;
 		}
 		case 3: { // ->
 			staffPos.x = notePos(staffPos);
-			staffPos.x += 16;
+			staffPos.x += 6;
 			break;
 		}
 	}
@@ -143,13 +146,16 @@ function moveNotes() {
 function noteInfo(e) {
 	return Math.round((selectionSize[1][1] - e.y)/yStep*2) - 2;
 }
+function fixNoteY(n, e) {
+	e.y = selectionSize[1][1] - (n + 2)/2*yStep;
+}
 var cursor;
 function showPos(e) {
 	e = getCursorPos(e);
 	var info;
 	if (!cursor) {
 		cursor = document.createElementNS('http://www.w3.org/2000/svg','path');
-		cursor.setAttribute('d', 'm0 0 m-8 1 h16 m-8 -3 l0 7 m5 -3 l0 -32  m-8 30 m8 1  c0 -2 -2 -3 -6 -3  -3 0 -5 2 -5 3  0 2 2 3 7 3  3 0 5 -2 4 -4');
+		cursor.setAttribute('d', 'm-3 0 m-8 1 h26 m-13 -3 l0 7 m5 -3 l0 -32  m-8 30 m8 1  c0 -2 -2 -3 -6 -3  -3 0 -5 2 -5 3  0 2 2 3 7 3  3 0 5 -2 4 -4');
 		cursor.setAttribute("fill", "none")
 		cursor.setAttribute("stroke", "red")
 		paintArea.appendChild(cursor);
@@ -166,6 +172,7 @@ function redNotePos(e) {
 		var noteRead = noteList[noteInfo(e) + 18], info;
 		if (noteRead) {
 			info = parseInt(notePos(e)/6 - selectionSize[0][0]/6) + ' ' + noteRead;
+			moveLens2(e);
 		}
 		document.getElementById("info").innerText = info || 'Out of staff.';
 		return noteRead;
@@ -209,7 +216,9 @@ function moveLens() {
 	/* Prevent any other actions that mayoccur when moving over the image */
 	e.preventDefault();
 	/*Get the cursor's x and y positions: */
-	pos = getCursorPos(e);
+	moveLens2(getCursorPos(e));
+}
+function moveLens2(pos) {
 	/* Calculate the position of thelens: */
 	x = pos.x - 25 + 9;
 	y = pos.y - 25 + 10;
