@@ -7,36 +7,38 @@
 	<link rel="icon" href="favicon.ico" type="image/x-icon"/>
 	<title>abcjs: Visual Editor Demo</title>
 <link rel="stylesheet" type="text/css" href="dragging.css">
-<script src="../bin/abcjs_basic_6.0.0-beta.8-min.js" type="text/javascript"></script>
-<script src="abcjs_basic_6.0.0-beta.8.js" type="text/javascript"></script>
-<script type="text/javascript" src="editorDragging.js"></script>
-<script type="text/javascript" src="dragging.js"></script>
-<script type="text/javascript" src="changed.js"></script>
-<script type="text/javascript" src="additional.js"></script>
+<script src="https://www.abcjs.net/abcjs-basic.html"></script>
+<script src="abcjs_basic_6.0.0-beta.8.js"></script>
+<script src="editorDragging.js"></script>
+<script src="dragging.js"></script>
+<script src="changed.js"></script>
+<script src="additional.js"></script>
 <style>
 html, body {
 	margin: 0px;
 	width: 100%;
+	display: flex;
 }
 svg#paintArea {
 	width: 50%;
-	height: 200%;
+	height: 100%;
 	position: absolute;
 	left: 0px;
 	z-index: 1000;
 }
 textarea {
-	width: 95%;
 	overflow: auto;
+}
+textarea:focus {
+	background-color: lightblue;
+}
+input:focus {
+	background-color: lightblue;
 }
 .img-zoom-result {
 	/*set the size of the resultdiv:*/
 	width: 100px;
 	height: 100px;
-}
-img {
-	left:0px;
-	top:0px;
 }
 svg#zoomArea {
 	stroke:rgb(0,223,0);
@@ -45,45 +47,56 @@ svg#zoomArea {
 }
 input#SideNotes {
 	position: absolute;
+	width: 300px;
+}
+div.work-area {
+	min-width: 50%;
+	max-height: inherit;
+	float: left;
+}
+div.side-bar {
+	text-align: justify;
+	float: right;
+	width: 403px;
+	position: relative;
+}
+img {
+	top: 0px;
+	left: 0px;
+	position: relative;
+	max-width: inherit;
 }
 </style>
 </head>
-<body onload="init()">
-<table width="100%" height="100%" cellPadding="0" cellSpacing="0">
-	<tr>
-		<td onclick="staffRect(event)" onmousemove="showPos(event)" valign="top">
-			<svg id="paintArea" xmlns="http://www.w3.org/2000/svg" onmousemove="moveLens()"></svg>
-			<img src="https://www.didldu.de/files/media/folk-music/1101209090003-1.png">
-		</td>
-		<td>
-			<svg id="zoomArea" class="img-zoom-result" xmlns="http://www.w3.org/2000/svg">
-				<line x1="0" y1="49" x2="100" y2="49"/>
-				<line x1="50" y1="0" x2="50" y2="100"/>
-				<path d="m50 46 m-24 3 h48 m-24 -9 l0 21 m15 -9 l0 -56  m-24 50 m24 3  c0 -6 -6 -9 -18 -9  -9 0 -15 6 -15 9  0 6 6 9 21 9  9 0 15 -6 12 -12">
-			</svg>
-			<input id="SideNotes" onkeydown="keyFuncs(event)">
-			<div id="warnings"></div>
-			<div id="paper">paper</div>
-			<div id="source">source</div>
-			<div id="info"></div>
-			<textarea id="abc" rows="20" onchange="setSrc(this.value)"></textarea><br>
-			<input type="button" value="Reset" onclick="resetRange()">
-			<input type="button" value="Save" onclick="sendNotes()">
-			<ul>
-				<li><label><input type="checkbox" id="allowDragging" onclick="optionChanged()" checked>Allow Dragging</label>
-					<div>When checked, then text is not selectable on the music and notes are draggable. You can
-						also navigate through the music with the tab key, and change notes with the up and down arrows. When not checked, then items are selectable, but not draggable.
-					</div>
-				</li>
-				<li><label><input type="checkbox" id="selectAll" onclick="optionChanged()">Select All</label>
-					<div>When this is checked, nearly every visible thing is selectable. When it is not checked, then only
-						the notes, rests, and measures are selectable.
-					</div>
-				</li>
-				<li><button onclick="selectPrevious()">Previous</button><button onclick="selectNext()">Next</button></li>
-			</ul>
-		</td>
-	</tr>
-</table>
+<body onload="init()" onscroll="adjustSide()">
+<div class="work-area" onclick="staffRect(event)" onmousemove="showPos(event)">
+	<svg id="paintArea" xmlns="http://www.w3.org/2000/svg" onmousemove="moveLens()"></svg>
+	<img src="" alt="Source sheet">
+</div>
+<div class="side-bar">
+	<svg id="zoomArea" class="img-zoom-result" xmlns="http://www.w3.org/2000/svg">
+		<line x1="0" y1="49" x2="100" y2="49"></line>
+		<line x1="50" y1="0" x2="50" y2="100"></line>
+		<path d="m50 46 m-24 3 h48 m-24 -9 l0 21 m15 -9 l0 -56  m-24 50 m24 3  c0 -6 -6 -9 -18 -9  -9 0 -15 6 -15 9  0 6 6 9 21 9  9 0 15 -6 12 -12"></path>
+	</svg>
+	<input id="SideNotes" onkeydown="keyFuncs(event)" onmouseover="sideFocus()">
+	<input type="file" accept="image/*" onchange="setIMG(this)">
+	<div id="warnings"></div>
+	<div id="paper">paper</div>
+	<div id="source">source</div>
+	<div id="info"></div>
+	<textarea id="abc" rows="20" cols="60" onchange="setSrc(this.value)" onmouseover="focus()" onmouseout="sideFocus()"></textarea><br>
+	<input type="button" value="Reset image" onclick="resetRange()">
+	<input type="button" value="Save clicked notes" onclick="sendNotes()">
+	<ul>
+		<li><label><input type="checkbox" id="allowDragging" onclick="optionChanged()" checked>Allow Dragging</label>
+			<div>When checked, then text is not selectable on the music and notes are draggable. You can also navigate through the music with the tab key, and change notes with the up and down arrows. When not checked, then items are selectable, but not draggable.</div>
+		</li>
+		<li><label><input type="checkbox" id="selectAll" onclick="optionChanged()">Select All</label>
+			<div>When this is checked, nearly every visible thing is selectable. When it is not checked, then only the notes, rests, and measures are selectable.</div>
+		</li>
+		<li><button onclick="selectPrevious()">Previous</button><button onclick="selectNext()">Next</button></li>
+	</ul>
+</div>
 </body>
 </html>

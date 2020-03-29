@@ -1,4 +1,4 @@
-var selectionRange = [], selectionSize = [], yStep, notes = {}, paintArea, staffPos = {}, staffImg;
+var selectionRange = [], selectionSize = [], yStep, notes = {}, paintArea, staffPos = {}, staffImg, lastKey;
 var noteList = allPitches.slice(14, 49), lens, result, cx = 3, cy = 3;
 function staffRect(e) {
 	e = getCursorPos(e);
@@ -12,13 +12,15 @@ function drawLines(e) {
 	selectionSize = selectionRange;
 	var y = selectionRange[0][1] + 1;
 	yStep = (selectionRange[1][1] - y + 1) / 4;
-	for (var i=0;i<5;i++) {
+	y -= 3 * yStep;
+	for (var i=-3;i<8;i++) {
 		var newLine = document.createElementNS('http://www.w3.org/2000/svg','line');
 		newLine.setAttribute('x1', selectionRange[0][0]);
 		newLine.setAttribute('y1', y+0.5);
 		newLine.setAttribute('x2', selectionRange[1][0]);
 		newLine.setAttribute('y2', y+0.5);
-		newLine.setAttribute("stroke", "red")
+		if (i > -1 && i < 5) newLine.setAttribute("stroke", "#FF0000");
+		else newLine.setAttribute("stroke", "#FFB0FF");
 		newLine.setAttribute("stroke-width", "1px")
 		paintArea.appendChild(newLine);
 		y += yStep;
@@ -45,7 +47,8 @@ function keyFuncs(e) {
 		return;
 	} else {
 		grp = parseInt(e.key);
-		if (grp >= 0 && grp <= 9) {
+		if (grp >= 0 && grp <= 9
+		&& lastKey != 'z' && lastKey != '|') {
 			var noteRead = noteList[noteInfo(staffPos) + 18];
 			if (noteRead) {
 				createNote(staffPos);
@@ -65,6 +68,7 @@ function keyFuncs(e) {
 		moveNotes();
 	}
 	window.status = e.key;
+	lastKey = (e.altKey && e.key == 'w') ? '|' : e.key; // Alt + w => | (Czech keyboard)
 }
 function arrowsLogic(e, grp) {
 	if ({} === staffPos) staffPos = {x: e.x, y: e.y};
@@ -112,19 +116,22 @@ function addNote(x, y, svg, col, withLine) {
 }
 function setSrc(abcString) {
 	if (!srcEl) {
+		window.onscroll = adjustSide;
 		srcEl = document.getElementById("abc");
 		paintArea = document.getElementById("paintArea");
 		staffImg = paintArea.nextElementSibling;
 		lens = document.getElementsByClassName("img-zoom-lens")[0];
-		imageZoom("zoomArea");
+		//imageZoom();
 	}
 	if (abcString) srcEl.value = abcString;
 }
 function sendNotes() {
 	if (Object.keys(notes).length) {
+		var clickNotes = [];
 		for(var p in notes) {
-			sendNote(noteList[notes[p] + 18] + ' ');
+			clickNotes.push(noteList[notes[p] + 18]);
 		}
+		document.getElementById("abc").value += clickNotes.join(' ');
 		notes = {};
 		selectionRange = [];
 		selectionSize = [];
@@ -157,7 +164,7 @@ function showPos(e) {
 		cursor = document.createElementNS('http://www.w3.org/2000/svg','path');
 		cursor.setAttribute('d', 'm-3 0 m-8 1 h26 m-13 -3 l0 7 m5 -3 l0 -32  m-8 30 m8 1  c0 -2 -2 -3 -6 -3  -3 0 -5 2 -5 3  0 2 2 3 7 3  3 0 5 -2 4 -4');
 		cursor.setAttribute("fill", "none")
-		cursor.setAttribute("stroke", "red")
+		cursor.setAttribute("stroke", "#FF00FF")
 		paintArea.appendChild(cursor);
 	}
 	staffPos.x = e.x;
@@ -205,11 +212,12 @@ function getCursorPos(e) { // https://www.w3schools.com/howto/howto_js_image_mag
 	y = y - window.pageYOffset;
 	return {x : x, y : y};
 }
-function imageZoom(resultID) {
-	result = document.getElementById(resultID);
+var imgObj;
+function imageZoom() {
+	result = result || document.getElementById("zoomArea");
 	/* Set background properties for the result DIV */
 	result.style.backgroundImage = "url('" + staffImg.src + "')";
-	result.style.backgroundSize = (staffImg.width * cx) + "px " + (staffImg.height * cy) + "px";
+	result.style.backgroundSize = (imgObj.width * cx) + "px " + (imgObj.height * cy) + "px";
 }
 function moveLens() {
 	var pos, x, y, e = event;
@@ -224,4 +232,26 @@ function moveLens2(pos) {
 	y = pos.y - 25 + 10;
 	/* Display what the lens "sees": */
 	result.style.backgroundPosition = "-" + (x*cx) + "px -" + (y*cy-2) + "px";
+}
+function sideFocus() {
+	document.getElementById("SideNotes").focus();
+}
+function setIMG(input) {
+	if (input.files && input.files[0]) {
+		var reader = new FileReader();
+
+		reader.onload = function (e) {
+			staffImg.src = e.target.result;
+			imgObj = new Image();
+			imgObj.onload = imageZoom;
+			imgObj.src = staffImg.src;
+		};
+
+		reader.readAsDataURL(input.files[0]);
+		//input.disabled = true;
+	}
+}
+
+function adjustSide() {
+	result.parentNode.style.top = window.pageYOffset + 'px';
 }
