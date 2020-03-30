@@ -2,7 +2,6 @@ var selectionRange = [], selectionSize = [], yStep, notes = {}, paintArea, staff
 var noteList = allPitches.slice(14, 49), lens, result, cx = 3, cy = 3;
 function staffRect(e) {
 	e = getCursorPos(e);
-	e.y--;
 	if (selectionRange.length < 2) drawLines(e);
 	else createNote(e);
 }
@@ -12,16 +11,17 @@ function drawLines(e) {
 	selectionSize = selectionRange;
 	var y = selectionRange[0][1] + 1;
 	yStep = (selectionRange[1][1] - y + 1) / 4;
-	y -= 3 * yStep;
+	y = parseInt(y - (3 * yStep));
 	for (var i=-3;i<8;i++) {
 		var newLine = document.createElementNS('http://www.w3.org/2000/svg','line');
-		newLine.setAttribute('x1', selectionRange[0][0]);
-		newLine.setAttribute('y1', y+0.5);
-		newLine.setAttribute('x2', selectionRange[1][0]);
-		newLine.setAttribute('y2', y+0.5);
-		if (i > -1 && i < 5) newLine.setAttribute("stroke", "#FF0000");
-		else newLine.setAttribute("stroke", "#FFB0FF");
-		newLine.setAttribute("stroke-width", "1px")
+		var adjY = parseInt(y);
+		if (2*adjY === parseInt(2*y)) adjY += 0.5;
+		setAttrs(newLine, {
+			x1: selectionRange[0][0], y1: adjY,
+			x2: selectionRange[1][0], y2: adjY,
+			stroke: (i > -1 && i < 5)?'#FF8080':'#FFC0FF',
+			'stroke-width': '1px'
+		});
 		paintArea.appendChild(newLine);
 		y += yStep;
 	}
@@ -34,8 +34,8 @@ function drawLines(e) {
 function createNote(e) {
 	var noteRead = noteInfo(e);
 	if (noteList[noteRead + 18]) {
-		addNote(notePos(e), selectionRange[0][1] + 1 - (yStep*(noteRead-6)/2), document.getElementById("paintArea"),
-		"#00DF00", !(noteRead & 1));
+		addNote(notePos(e), selectionRange[0][1] + 1 - parseInt(yStep*(noteRead-6)/2), document.getElementById("paintArea"),
+		"#00F800", !(noteRead & 1));
 		notes[notePos(e)] = noteRead;
 	}
 }
@@ -101,29 +101,35 @@ function getSrc() {
 	return srcEl.value;
 }
 function addNote(x, y, svg, col, withLine) {
-	cursor = document.createElementNS('http://www.w3.org/2000/svg','path');
-	var line = withLine?'M'+(x-10)+' '+y+' H'+(x+10) + ' ':'';
-	cursor.setAttribute('d', line + 'M '+(x+5.5)+' '+y+' V'+(y-28));
-	cursor.setAttribute("stroke", col)
-	svg.appendChild(cursor);
-	cursor = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
-	cursor.setAttribute('cx', x);
-	cursor.setAttribute('cy', y);
-	cursor.setAttribute('rx', 6);
-	cursor.setAttribute('ry', 4);
-	cursor.setAttribute("fill", col);
-	svg.appendChild(cursor);
+	var newNote = document.createElementNS('http://www.w3.org/2000/svg','path');
+	var line = withLine?'M'+(x-9.5)+' '+(y+0.5)+' H'+(x+10) + ' ':'';
+	setAttrs(newNote, {
+		d: line + 'M '+(x+5.5)+' '+y+' V'+(y-28),
+		stroke: col,
+		'stroke-width': '0.5px'
+	});
+	svg.appendChild(newNote);
+	newNote = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+	setAttrs(newNote, {
+		cx: x, cy: (y+0.5),
+		rx: 6, ry: 4,
+		fill: col,
+		'fill-opacity': 0.9
+	});
+	svg.appendChild(newNote);
 }
 function setSrc(abcString) {
-	if (!srcEl) {
-		window.onscroll = adjustSide;
-		srcEl = document.getElementById("abc");
-		paintArea = document.getElementById("paintArea");
-		staffImg = paintArea.nextElementSibling;
-		lens = document.getElementsByClassName("img-zoom-lens")[0];
-		//imageZoom();
-	}
+	if (!srcEl) addInit();
 	if (abcString) srcEl.value = abcString;
+}
+function addInit() {
+	window.onscroll = adjustSide;
+	srcEl = document.getElementById("abc");
+	paintArea = document.getElementById("paintArea");
+	staffImg = paintArea.nextElementSibling;
+	lens = document.getElementsByClassName("img-zoom-lens")[0];
+	result = result || document.getElementById("zoomArea");
+	//imageZoom();
 }
 function sendNotes() {
 	if (Object.keys(notes).length) {
@@ -162,9 +168,12 @@ function showPos(e) {
 	var info;
 	if (!cursor) {
 		cursor = document.createElementNS('http://www.w3.org/2000/svg','path');
-		cursor.setAttribute('d', 'm-3 0 m-8 1 h26 m-13 -3 l0 7 m5 -3 l0 -32  m-8 30 m8 1  c0 -2 -2 -3 -6 -3  -3 0 -5 2 -5 3  0 2 2 3 7 3  3 0 5 -2 4 -4');
-		cursor.setAttribute("fill", "none")
-		cursor.setAttribute("stroke", "#FF00FF")
+		setAttrs(cursor, {
+			d: 'm-5 0.5 m-8 1 h28 m-13.5 -2.5 l0 6 m5 -2 l0 -32  m-8 30 m8 1  c0 -2 -2 -3 -6 -3  -3 0 -5 2 -5 3  0 2 2 3 7 3  3 0 5 -2 4 -4',
+			fill: 'none',
+			stroke: '#FF0000',
+			'stroke-width': '0.5px'
+		});
 		paintArea.appendChild(cursor);
 	}
 	staffPos.x = e.x;
@@ -214,7 +223,6 @@ function getCursorPos(e) { // https://www.w3schools.com/howto/howto_js_image_mag
 }
 var imgObj;
 function imageZoom() {
-	result = result || document.getElementById("zoomArea");
 	/* Set background properties for the result DIV */
 	result.style.backgroundImage = "url('" + staffImg.src + "')";
 	result.style.backgroundSize = (imgObj.width * cx) + "px " + (imgObj.height * cy) + "px";
@@ -254,4 +262,9 @@ function setIMG(input) {
 
 function adjustSide() {
 	result.parentNode.style.top = window.pageYOffset + 'px';
+}
+function setAttrs(obj, list) {
+	for(var a in list) {
+		obj.setAttribute(a, list[a]);
+	}
 }

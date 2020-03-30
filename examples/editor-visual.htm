@@ -43,7 +43,7 @@ input:focus {
 svg#zoomArea {
 	stroke:rgb(0,223,0);
 	fill: none;
-	stroke-width:1px;
+	stroke-width:0.5px;
 }
 input#SideNotes {
 	position: absolute;
@@ -75,9 +75,9 @@ img {
 </div>
 <div class="side-bar">
 	<svg id="zoomArea" class="img-zoom-result" xmlns="http://www.w3.org/2000/svg">
-		<line x1="0" y1="49" x2="100" y2="49"></line>
-		<line x1="50" y1="0" x2="50" y2="100"></line>
-		<path d="m50 46 m-24 3 h48 m-24 -9 l0 21 m15 -9 l0 -56  m-24 50 m24 3  c0 -6 -6 -9 -18 -9  -9 0 -15 6 -15 9  0 6 6 9 21 9  9 0 15 -6 12 -12"></path>
+		<line x1="0" y1="49.5" x2="100" y2="49.5"></line>
+		<line x1="50.5" y1="0" x2="50.5" y2="100"></line>
+		<path d="m50.5 46.5 m-24 3 h48 m-24 -9 l0 21 m15 -9 l0 -56  m-24 50 m24 3  c0 -6 -6 -9 -18 -9  -9 0 -15 6 -15 9  0 6 6 9 21 9  9 0 15 -6 12 -12"></path>
 	</svg>
 	<input id="SideNotes" onkeydown="keyFuncs(event)" onmouseover="sideFocus()">
 	<input type="file" accept="image/*" onchange="setIMG(this)">
